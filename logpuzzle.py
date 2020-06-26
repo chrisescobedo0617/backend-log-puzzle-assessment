@@ -26,8 +26,35 @@ def read_urls(filename):
     extracting the hostname from the filename itself, sorting
     alphabetically in increasing order, and screening out duplicates.
     """
-    # +++your code here+++
-    pass
+    url_list = []
+    list_ = []
+    with open(filename) as f:
+        log_file = f.read()
+    url_pattern = re.compile(r'GET (\S+.jpg) HTTP')
+    server_pattern = re.compile(r'_(\S+)')
+    server_match = server_pattern.finditer(filename)
+    matches = url_pattern.finditer(log_file)
+    for s_match in server_match:
+        for match in matches:
+            url = f"http://{s_match.group(1)}{match.group(1)}"
+            if url not in url_list:
+                url_list.append(url)
+    sorted_url_list = sorted(url_list)
+    for url in sorted_url_list:
+        list_.append(url.split('-'))
+    sorted_list = sorted(list_,key=lambda url: url[-1])
+    list_of_strings = ['-'.join(url)for url in sorted_list]
+    list_of_strings.pop()
+    if 'animal_code' in filename:
+        return sorted_url_list
+    return list_of_strings
+
+
+def image_src(url_list):
+    string = ''
+    for num, url in enumerate(url_list):
+        string += f'<img src="img{num}">'
+    return string
 
 
 def download_images(img_urls, dest_dir):
@@ -38,9 +65,21 @@ def download_images(img_urls, dest_dir):
     to show each local image file.
     Creates the directory if necessary.
     """
-    # +++your code here+++
-    pass
-
+    if not os.path.exists(dest_dir):
+        os.makedirs(dest_dir)
+    else:
+        print('sorry, path exists')
+    os.chdir(dest_dir)
+    for num, image in enumerate(img_urls):
+        print(f'Retrieving ... {image}')
+        file_name = f'img{num}'
+        urllib.request.urlretrieve(image, file_name)
+    with open('index.html','w') as f:
+        message = f"""<html>
+        <body>{image_src(img_urls)}</body>
+        </html>
+        """
+        f.write(message)
 
 def create_parser():
     """Creates an argument parser object."""
